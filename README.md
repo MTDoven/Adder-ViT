@@ -1,6 +1,6 @@
 # Exploration of AdderViT
 
-## Motivation
+# Motivation
 
 In recent years, the field of neural network computation has seen a significant reliance on matrix multiplication operations. However, it is worth noting that matrix multiplication is a computationally intensive operation. In this report, we explore the possibility of finding a more efficient alternative to the dot product similarity with the goal of accelerating inference in neural networks.
 
@@ -10,13 +10,13 @@ There are already some works that have explored similar ideas. For instance, [Ad
 
 However, all of the aforementioned methods were originally applied to CNNs. We aim to adapt these techniques to Transformer-based models.
 
-## Adder-FC
+# Adder-FC
 
 1. Multi: $Y_{L,D_{out}}=X_{L,D_{in}}\cdot W_{D_{in},D_{out}}+b_{D_{out}}$ in which $y_{l,d}=\sum\limits_{i=1}^{D_{in}} x_{l,i} \times w_{i,d}$  
 2. Adder: $Y_{L,D_{out}}=X_{L,D_{in}}\bigoplus W_{D_{in},D_{out}}+b_{D_{out}}$ in which $y_{l,d}=-\sum\limits_{i=1}^{D_{in}}| x_{l,i} - w_{i,d}|$  
 3. Euclid: $Y_{L,D_{out}}=X_{L,D_{in}}\bigotimes W_{D_{in},D_{out}}+b_{D_{out}}$ in which $y_{l,d}=-\sum\limits_{i=1}^{D_{in}}( x_{l,i} - w_{i,d})^2$
 
-### Problem 1: Back propagation on Adder
+## Problem 1: Back propagation on Adder
 
 We conducted a comparison of these methods with a Simple_ViT model. Methods 1 and 3 are differentiable functions, allowing for direct application of backpropagation. However, the Adder method encountered issues with backpropagation. In line with the AdderNet approach, we mitigated this problem by substituting the sign precision gradient with the full precision gradient. (For more details, refer to [AdderNet](https://arxiv.org/abs/1912.13200).)
 
@@ -44,7 +44,7 @@ However, there is another serious problem, as the derivative of addition is asso
 | Adder | $OOM$ | $\times6.2$ | $OOM$ |
 | optim-Adder | $\times4.1$ | $\times1.3$ | $\times1.3$ |
 
-### Problem 2: L1-distance caused diversity loss
+## Problem 2: L1-distance caused diversity loss
 
 We thought about how radial distances (distances in each norm) behave in space. Points on the same surface will map to the same number. When $p=1$ some area in the space may be mapped to the same point, which will lead to unreasonable dimensionality reduction and loss of information.
 
@@ -54,7 +54,7 @@ We aim to apply a transformation to the input to stretch the shape of the distri
 
 $$Y_{L,D}=(E_{D}\times X_{L,D})\bigoplus W_{D,D}+b_{D}$$
 
-### Problem 3: Invalid residual connections
+## Problem 3: Invalid residual connections
 
 Residual connection is a very common operation. The basic idea is that if this layer can't learn anything useful, then let this layer be discarded and the information from the previous layer can be directly passed on without any loss of information. But in Adder operation, there will always be some information, even useless or poisonous, added into feature map. 
 
@@ -68,7 +68,7 @@ We introduced another soft-mask transformation, denoted as F, to selectively mas
 
 $$X_{L,D}=F_{D}\times (X_{L,D}\bigoplus W_{D,D}+b_{D})$$
 
-### Final Methods
+## Final Methods
 
 We utilize the following function for forward propagation:
 
@@ -81,9 +81,9 @@ $$\frac{\partial y}{\partial w} = HardTanh(4\times(w-x))$$
 
 **Unfortunately, this AdderViT is currently encountering some other unidentified issues and is not yielding satisfactory results. It's possible that the limited range of expression provided by Adder may not be sufficient to achieve a performance level comparable to multiplication in ViT models.**
 
-## Experiments
+# Experiments
 
-### Simple_ViT on CIFAR10  
+## Simple_ViT on CIFAR10  
 
 In this group of experiment, we used weak data augmentation, which makes the Multi overfits. Multi may actually be better than Adder if we use proper data augmentation.
 
@@ -99,19 +99,19 @@ In this group of experiment, we used weak data augmentation, which makes the Mul
 ![first_exp](./pictures/first_exp.png)
 
 
-### Simple_ViT on ImageNet
+## Simple_ViT on ImageNet
 
 Due to the absence of optimization techniques tailored to Adder, the training process is considerably slow. As a result, it was trained on ImageNet for only 25 epochs, during which it exhibited a substantial performance gap, with addition performing significantly worse than multiplication.
 
 ![secend_exp](./pictures/secend_exp.png)
 
-### Swin(weakened) on CIFAR10
+## Swin(weakened) on CIFAR10
 
 Across all models, Adder consistently lags behind Multi by a margin of at least $10\%$ in terms of accuracy.
 
 ![third_exp](./pictures/third_exp.png)
 
-### Final Results
+## Final Results
 
  Due to the training challenges from the lack of optimization and some other unidentified issues, our work was regrettably compelled to come to a halt.
 
