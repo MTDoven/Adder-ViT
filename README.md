@@ -1,5 +1,7 @@
 # Exploration of AdderViT
 
+Try to create an addition based ViT instead of matrix multiplication.
+
 # Motivation
 
 In recent years, the field of neural network computation has seen a significant reliance on matrix multiplication operations. However, it is worth noting that matrix multiplication is a computationally intensive operation. In this report, we explore the possibility of finding a more efficient alternative to the dot product similarity with the goal of accelerating inference in neural networks.
